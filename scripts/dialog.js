@@ -279,37 +279,30 @@ class SFDialog extends FormApplication
 				averageLevelOfPlayers: averageLevelOfPlayers
 			};
 
+			let encounters = null;
 			if (SFHelpers.useLocalEncounterGenerator())
 			{
 				let forceReload = false;
 				await SFLocalHelpers.populateObjectsFromCompendiums(forceReload);
 				let filteredMonsters = await SFLocalHelpers.filterMonstersFromCompendiums(params);
-				let generateEncounters = await SFLocalHelpers.createEncounters(filteredMonsters, params, 30);
-				generateEncounters = generateEncounters.sort((a, b) =>
-				{
-					const da = SFCONSTS.DIFFICULTY[a.difficulty.replace(" ", "")];
-					const db = SFCONSTS.DIFFICULTY[b.difficulty.replace(" ", "")];
-					if (da > db) return -1;
-					if (da < db) return 1;
-					return 0;
-				});
-				const encounterData = await SFHelpers.parseEncounter(generateEncounters, params);
-				_this.populateEncounters(encounterData);
+				encounters = await SFLocalHelpers.createEncounters(filteredMonsters, params, 30);
 			}
 			else
 			{
-				let fetchedData = await SFHelpers.fetchData(params);
-				fetchedData = fetchedData.sort((a, b) =>
-				{
-					const da = SFCONSTS.DIFFICULTY[a.difficulty.replace(" ", "")];
-					const db = SFCONSTS.DIFFICULTY[b.difficulty.replace(" ", "")];
-					if (da > db) return -1;
-					if (da < db) return 1;
-					return 0;
-				});
-				const encounterData = await SFHelpers.parseEncounter(fetchedData, params);
-				_this.populateEncounters(encounterData);
+				encounters = await SFHelpers.fetchData(params);
 			}
+			
+			encounters = encounters.sort((a, b) =>
+			{
+				const da = SFCONSTS.DIFFICULTY[a.difficulty.replace(" ", "")];
+				const db = SFCONSTS.DIFFICULTY[b.difficulty.replace(" ", "")];
+				if (da > db) return -1;
+				if (da < db) return 1;
+				return 0;
+			});
+			
+			const encounterData = await SFHelpers.parseEncounter(encounters, params);
+			_this.populateEncounters(encounterData);
 
 			$button.prop('disabled', false).removeClass('disabled');
 			$button.find('i.fas').removeClass('fa-spinner fa-spin').addClass('fa-dice');
